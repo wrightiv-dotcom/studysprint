@@ -1,57 +1,57 @@
 (() => {
-const robot='<svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M32 9v7M25 9h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><rect x="10" y="17" width="44" height="35" rx="13" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="2"/><path d="M5 30v12M59 30v12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="23" cy="32" r="4" fill="currentColor"/><circle cx="41" cy="32" r="4" fill="currentColor"/><path d="M24 43q8 6 16 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';
-document.body.insertAdjacentHTML('beforeend',`<button id="bot-launch" class="bot-launch" aria-haspopup="dialog" aria-controls="bot-dialog">${robot}<span>Plan with SprintBot<small>Make your next step easier</small></span><span aria-hidden="true">✧</span></button>
-<dialog id="bot-dialog" class="bot-dialog"><div class="bot-top"><div class="bot-avatar">${robot}</div><div><h2>SprintBot</h2><span>Your study-planning assistant</span></div><button type="button" id="bot-close" class="close" aria-label="Close SprintBot">×</button></div>
-<div class="bot-intro"><b>Hey! Let’s get you started. ✧</b><p>Tell me what’s due. I’ll break it into smaller steps and check where they fit in your study schedule.</p><span id="bot-status" class="bot-status">● Checking AI availability…</span></div>
-<form id="bot-form"><label>Planning mode<select id="bot-mode"><option value="local">Instant local planner</option><option value="ai" disabled>AI agent (checking connection)</option></select></label><p id="bot-ai-availability" class="fine">The local planner works without an API key.</p>
-<label>Start with an existing assignment<select id="bot-existing"><option value="">Create a new assignment</option></select></label><label>What are you working on?<input name="title" required maxlength="100" placeholder="e.g. History research paper"></label>
-<div class="form-row"><label>Course (optional)<input name="course" maxlength="60" placeholder="e.g. HIST 201"></label><label>Assignment type<select name="type"><option value="auto">Choose for me</option><option value="writing">Essay / research paper</option><option value="coding">Coding project</option><option value="exam">Exam preparation</option><option value="presentation">Presentation</option><option value="general">Other assignment</option></select></label></div>
-<label>Paste the requirements<textarea name="requirements" rows="4" required maxlength="5000" placeholder="Paste your instructions or list one task per line. Review the suggested steps against your rubric."></textarea></label>
-<div class="form-row"><label>Deadline<input type="date" name="deadline" required></label><label>Total estimated hours<input type="number" name="hours" min="0.5" max="200" step="0.5" value="4" required></label></div>
-<label id="bot-consent-label" class="bot-consent" hidden><input type="checkbox" id="bot-consent"> Send this assignment, availability windows, and occupied session times to OpenAI for planning. No other assignment text is sent. Review AI estimates before approval.</label>
-<p id="bot-error" role="alert" hidden></p><button id="bot-submit" type="submit" class="primary">✧ Build my quick plan</button><p id="bot-mode-note" class="fine">Local mode keeps your assignment in this browser.</p></form>
-<section id="bot-result" hidden><div class="bot-answer"><span id="bot-result-label">SPRINTBOT’S SUGGESTION</span><h3 id="bot-result-title"></h3><p id="bot-summary"></p></div><ol id="bot-steps"></ol><p id="bot-fit" role="status"></p><details id="bot-trace" hidden><summary>See the AI agent’s tool activity</summary><ol id="bot-trace-list"></ol></details>
-<button id="bot-review" type="button" class="primary">Review milestones & schedule →</button><button id="bot-edit" type="button" class="text-button">← Change assignment details</button>
-<details class="bot-ai"><summary>Refine a plan in ChatGPT separately</summary><p>Copy this prompt and paste it into ChatGPT yourself. Nothing is sent automatically through this link.</p><textarea id="bot-prompt" readonly aria-label="Prompt for AI planning" rows="7"></textarea><div class="bot-ai-actions"><button id="bot-copy" type="button" class="dark">Copy planning prompt</button><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a></div></details></section></dialog>`);
-const modal=$('#bot-dialog'),form=$('#bot-form');let pending=null,existingId='',aiAvailable=false,controller=null;
-async function checkAI(){
- try{const r=await fetch(new URL('api/config',document.baseURI),{signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error();const config=await r.json();aiAvailable=config.aiAvailable===true}catch{aiAvailable=false}
- const option=$('#bot-mode option[value=ai]');option.disabled=!aiAvailable;option.textContent=aiAvailable?'AI agent · OpenAI + schedule tools':'AI agent unavailable on this host';
- $('#bot-status').textContent=aiAvailable?'● AI agent connected · approval required':'● Local planner available · AI not connected';
- $('#bot-ai-availability').textContent=aiAvailable?'AI mode uses the secure Express backend. Local mode stays in your browser.':'Live AI needs the Render-hosted app and a server-side API key. This host supports local planning.';
-}
-function updateMode(){const ai=$('#bot-mode').value==='ai';$('#bot-consent-label').hidden=!ai;$('#bot-consent').required=ai;$('#bot-submit').textContent=ai?'✧ Ask the AI planning agent':'✧ Build my quick plan';$('#bot-mode-note').textContent=ai?'Only the selected assignment and time windows are sent when you submit. Your key never enters this page.':'Local mode keeps your assignment in this browser.'}
-$('#bot-mode').onchange=updateMode;
-function openBot(){const select=$('#bot-existing');select.replaceChildren(new Option('Create a new assignment',''));state.assignments.forEach(a=>select.append(new Option(a.title,a.id)));if(state.assignments.some(a=>a.id===existingId))select.value=existingId;else existingId='';form.querySelector('[name=deadline]').min=dateKey(new Date());if(!form.querySelector('[name=deadline]').value)form.querySelector('[name=deadline]').value=dateKey(new Date(Date.now()+7*86400000));modal.showModal();checkAI()}
-$('#bot-launch').onclick=openBot;$('#bot-close').onclick=()=>modal.close();modal.addEventListener('close',()=>controller?.abort());
-const quick=document.createElement('button');quick.type='button';quick.className='bot-hero';quick.innerHTML=robot+'<span>Plan with SprintBot</span>';quick.onclick=openBot;$('#hero-add').after(quick);
-$('#bot-existing').onchange=e=>{existingId=e.target.value;const a=state.assignments.find(x=>x.id===existingId);if(!a){for(const name of ['title','course','requirements'])form.elements.namedItem(name).value='';form.querySelector('[name=deadline]').value=dateKey(new Date(Date.now()+7*86400000));return}for(const key of ['title','course','requirements','deadline'])form.elements.namedItem(key).value=a[key]||'';form.elements.namedItem('hours').value=Math.max(.5,Math.ceil(a.milestones.reduce((n,m)=>n+m.hours,0)*2)/2)};
-form.onsubmit=async e=>{
- e.preventDefault();const button=$('#bot-submit');$('#bot-error').hidden=true;let disabled=[];
+const icon='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 3v-3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5"/><path d="M7 9h10M7 13h6" stroke="currentColor" stroke-width="1.5"/></svg>';
+document.body.insertAdjacentHTML('beforeend',`<button id="bot-launch" class="bot-launch" aria-haspopup="dialog" aria-controls="bot-dialog">${icon}<span>Chat with SprintBot<small>Your study companion</small></span></button>
+<dialog id="bot-dialog" class="bot-dialog" aria-labelledby="bot-title"><div class="bot-top"><div class="bot-avatar">${icon}</div><div><h2 id="bot-title">SprintBot</h2><span>Your study-planning chat</span></div><button type="button" id="bot-close" class="close" aria-label="Close SprintBot">&times;</button></div>
+<div class="chat-settings"><label>Planning mode<select id="bot-mode"><option value="local">Local planner</option><option value="ai" disabled>AI (checking connection)</option></select></label><button id="bot-reset" class="text-button" type="button">New chat</button><span id="bot-status" class="bot-status">Checking AI availability...</span></div>
+<div id="bot-messages" class="bot-messages" role="log" aria-label="Conversation with SprintBot" aria-live="polite" aria-relevant="additions"></div>
+<form id="bot-form" class="chat-composer"><label for="bot-message">Message SprintBot</label><div class="chat-input-row"><textarea id="bot-message" rows="2" maxlength="5000" required placeholder="Type your reply..."></textarea><button id="bot-send" class="primary" type="submit">Send</button></div><p class="fine">Enter to send · Shift + Enter for a new line</p></form></dialog>`);
+const modal=$('#bot-dialog'),messages=$('#bot-messages'),input=$('#bot-message'),mode=$('#bot-mode');
+let step='title',values={},pending=null,busy=false,consent=false,controller=null;
+const prompts={title:'Hi! Let’s make your next assignment manageable. What are you working on?',requirements:'What are the requirements? Paste the instructions or list the tasks, one per line.',deadline:'When is it due? Use YYYY-MM-DD, or say today, tomorrow, or in 7 days.',hours:'About how many hours will it take in total? Enter a number from 0.5 to 200.'};
+function scroll(){messages.scrollTop=messages.scrollHeight}
+function say(text,who='assistant'){const bubble=document.createElement('div');bubble.className='chat-message chat-'+who;const name=document.createElement('span');name.className='chat-speaker';name.textContent=who==='user'?'You':'SprintBot';const body=document.createElement('p');body.textContent=text;bubble.append(name,body);messages.append(bubble);scroll();return bubble}
+function setBusy(value){busy=value;for(const id of ['bot-send','bot-reset','bot-mode','bot-message'])$('#'+id).disabled=value;messages.setAttribute('aria-busy',String(value));$('#bot-send').textContent=value?'Planning...':'Send';if(!value&&modal.open)input.focus()}
+function reset(){if(busy)return;step='title';values={course:'',type:'auto'};pending=null;consent=false;messages.replaceChildren();input.value='';say(prompts.title);if(modal.open)input.focus()}
+async function checkAI(){let available=false;try{const r=await fetch(new URL('api/config',document.baseURI),{signal:AbortSignal.timeout(5000)});if(r.ok)available=(await r.json()).aiAvailable===true}catch{}const option=mode.querySelector('[value=ai]');option.disabled=!available;option.textContent=available?'AI planner':'AI unavailable';$('#bot-status').textContent=available?'AI connected · local planning also available':'Local planning · AI is not connected';if(!available)mode.value='local'}
+function open(){if(!modal.open)modal.showModal();input.focus();checkAI()}
+$('#bot-launch').onclick=open;$('#bot-close').onclick=()=>modal.close();modal.addEventListener('close',()=>controller?.abort());$('#bot-reset').onclick=reset;
+const quick=document.createElement('button');quick.type='button';quick.className='bot-hero';quick.innerHTML=icon+'<span>Chat with SprintBot</span>';quick.onclick=open;$('#hero-add').after(quick);
+mode.onchange=()=>{consent=false;say(mode.value==='ai'?'AI planning selected. I’ll ask before sharing your assignment and schedule times.':'Local planning selected. Your assignment stays in this browser.');if(step==='consent'){step='retry';say('Reply retry to build your plan using the selected mode.')}};
+async function build(){
+ if(mode.value==='ai'&&!consent){step='consent';say('May I send this assignment, availability windows, and occupied session times to OpenAI to plan your study sessions? Reply yes to continue, or switch to local planning.');return}
+ setBusy(true);const status=say(mode.value==='ai'?'Reading your requirements and checking your schedule...':'Building your milestones and checking your schedule...');let timeout;
  try{
-  const values=Object.fromEntries(new FormData(form));const local=SprintPlanner.plan(values);const existing=state.assignments.find(a=>a.id===existingId);
-  if(existing?.milestones.some(m=>m.done)||existing?.sessions.some(s=>s.done))throw Error('This assignment already has completed work. Use Review / replan on its card to preserve your progress.');
-  const ai=$('#bot-mode').value==='ai';let result=local;
-  if(ai){
-   if(!aiAvailable||!$('#bot-consent').checked)throw Error('Confirm the AI data-sharing choice before submitting.');
-   disabled=Array.from(form.elements).map(el=>[el,el.disabled]);disabled.forEach(([el])=>el.disabled=true);button.textContent='Reading requirements and checking the schedule…';
-   controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),95000);
-   try{const response=await fetch(new URL('api/plan',document.baseURI),{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({assignment:values,windows:state.windows,busy:state.assignments.filter(a=>a.approved&&a.id!==existingId).flatMap(a=>a.sessions.filter(s=>!s.done).map(s=>({date:s.date,start:s.start,end:s.end}))),timezoneOffset:new Date().getTimezoneOffset()})});const body=await response.json();if(!response.ok)throw Error(body.error||'The AI request failed.');if(!Array.isArray(body.milestones)||!body.milestones.length)throw Error('No verified plan was returned.');result=body}finally{clearTimeout(timeout);controller=null}
+  const local=SprintPlanner.plan(values);let result=local;
+  if(mode.value==='ai'){
+   controller=new AbortController();timeout=setTimeout(()=>controller.abort(),95000);
+   const response=await fetch(new URL('api/plan',document.baseURI),{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({assignment:values,windows:state.windows,busy:state.assignments.filter(a=>a.approved).flatMap(a=>a.sessions.filter(s=>!s.done).map(s=>({date:s.date,start:s.start,end:s.end}))),timezoneOffset:new Date().getTimezoneOffset()})});
+   const body=await response.json();if(!response.ok)throw Error(body.error||'The AI request failed.');if(!Array.isArray(body.milestones)||!body.milestones.length)throw Error('No verified plan was returned.');result=body;
   }
-  if(!modal.open)return;
-  pending={id:existingId||crypto.randomUUID(),title:values.title.trim(),course:values.course.trim()||'Independent study',requirements:values.requirements.trim(),deadline:values.deadline,priority:existing?.priority||'Normal',approved:false,sessions:[],milestones:result.milestones.map(m=>({title:m.title,hours:m.hours,done:false,id:crypto.randomUUID()}))};
-  $('#bot-result-label').textContent=ai?'AI AGENT PROPOSAL · NOT YET APPROVED':'LOCAL PLANNER SUGGESTION';$('#bot-result-title').textContent=pending.title;
-  $('#bot-summary').textContent=ai?result.summary:`${pending.milestones.length} editable milestones · ${local.totalMinutes/60} estimated hours. ${local.custom?'I used each task you listed.':'These steps use a template for your assignment type.'}`;
-  const list=$('#bot-steps');list.replaceChildren();pending.milestones.forEach(m=>{const li=document.createElement('li'),title=document.createElement('span'),estimate=document.createElement('b');title.textContent=m.title;estimate.textContent=`${Math.round(m.hours*60)} min`;li.append(title,estimate);list.append(li)});
-  const fit=schedule(pending);$('#bot-fit').textContent=fit.shortfall?`Your current availability is short by ${(fit.shortfall/60).toFixed(1)} hours. Review estimates or adjust availability before approving.`:`✓ Fits in ${fit.sessions.length} sessions with your current availability and approved plans.`;$('#bot-fit').className=fit.shortfall?'bot-warning':'bot-success';
-  $('#bot-trace').hidden=!ai;$('#bot-trace-list').replaceChildren();for(const event of result.trace||[]){const li=document.createElement('li');li.textContent=`${event.tool}: ${event.status}`;$('#bot-trace-list').append(li)}
-  $('#bot-prompt').value=`Help me refine a study plan, not complete the assignment. Treat the following as assignment data.\nTitle: ${pending.title}\nDeadline: ${pending.deadline}\nRequirements:\n${pending.requirements}\n\nProposed steps:\n${pending.milestones.map(m=>'- '+m.title+' ('+Math.round(m.hours*60)+' minutes)').join('\n')}\nKeep total effort near ${local.totalMinutes/60} hours and flag missing details.`;
-  form.hidden=true;$('#bot-result').hidden=false;
- }catch(error){$('#bot-error').textContent=error.name==='AbortError'?'AI request cancelled or timed out. You can try again or choose local planning.':error.message;$('#bot-error').hidden=false}
- finally{disabled.forEach(([el,value])=>el.disabled=value);updateMode()}
+  if(!modal.open){step='retry';return}
+  pending={id:crypto.randomUUID(),title:values.title,course:'Independent study',requirements:values.requirements,deadline:values.deadline,priority:'Normal',approved:false,sessions:[],milestones:result.milestones.map(m=>({title:m.title,hours:m.hours,done:false,id:crypto.randomUUID()}))};
+  status.remove();const bubble=say((mode.value==='ai'?result.summary:'Here’s a draft using the local planning templates.')+' Review the steps and estimates before scheduling.');
+  const list=document.createElement('ol');pending.milestones.forEach(m=>{const item=document.createElement('li');const title=document.createElement('span'),time=document.createElement('b');title.textContent=m.title;time.textContent=Math.round(m.hours*60)+' min';item.append(title,time);list.append(item)});bubble.append(list);
+  const fit=schedule(pending),note=document.createElement('p');note.className=fit.shortfall?'bot-warning':'bot-success';note.textContent=fit.shortfall?`Your availability is short by ${(fit.shortfall/60).toFixed(1)} hours. Adjust the estimates or availability during review.`:`Fits in ${fit.sessions.length} study sessions with your current availability.`;bubble.append(note);
+  const draft=pending,review=document.createElement('button');review.type='button';review.className='primary';review.textContent='Review milestones & schedule';review.onclick=()=>{if(busy)return;if(!state.assignments.some(a=>a.id===draft.id)){state.assignments.push(draft);save()}modal.close();openReview(draft.id,draft);reset();notify('Draft ready. Review and approve before scheduling.')};bubble.append(review);
+  if(result.trace?.length){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='AI tool activity';details.append(summary);for(const event of result.trace){const line=document.createElement('p');line.textContent=event.tool+': '+event.status;details.append(line)}bubble.append(details)}
+  step='refine';say('Send changes to the requirements to revise this draft, or choose New chat to plan another assignment.');
+ }catch(error){status.remove();step='retry';say(error.name==='AbortError'?'Planning was cancelled or timed out. Reply retry to try again.':error.message+' Reply retry to try again.');}
+ finally{clearTimeout(timeout);controller=null;setBusy(false);scroll()}
+}
+$('#bot-form').onsubmit=async event=>{
+ event.preventDefault();if(busy)return;const text=input.value.trim();if(!text)return;input.value='';say(text,'user');
+ if(step==='title'){if(text.length>100){say('Please keep the title to 100 characters.');return}values.title=text;step='requirements';say(prompts[step]);return}
+ if(step==='requirements'){values.requirements=text;step='deadline';say(prompts[step]);return}
+ if(step==='deadline'){
+  let value=text.toLowerCase();const relative=value.match(/^in (\d+) days?$/);if(value==='today'||value==='tomorrow'||relative){const day=new Date();day.setDate(day.getDate()+(value==='tomorrow'?1:relative?Number(relative[1]):0));value=dateKey(day)}
+  const parsed=new Date(value+'T23:59:59');if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(parsed.getTime())||dateKey(parsed)!==value||parsed<new Date()){say('Please enter today or a future date as YYYY-MM-DD, for example '+dateKey(new Date(Date.now()+7*86400000))+'.');return}values.deadline=value;step='hours';say(prompts[step]);return;
+ }
+ if(step==='hours'){const hours=Number(text.replace(/\s*(hours?|hrs?)$/i,''));if(!Number.isFinite(hours)||hours<.5||hours>200){say('Please enter a number from 0.5 to 200 hours.');return}values.hours=hours;}
+ else if(step==='consent'){if(!/^(yes|send|agree)$/i.test(text)){say('Nothing was sent. Reply yes to share the assignment and schedule times, or switch to local planning.');return}consent=true;}
+ else if(step==='refine'){const next=values.requirements+'\nRequested changes: '+text;if(next.length>5000){say('The requirements are too long. Start a new chat with a shorter description.');return}values.requirements=next;for(const button of messages.querySelectorAll('button'))button.disabled=true;}
+ else if(step!=='retry')return;
+ await build();
 };
-$('#bot-edit').onclick=()=>{form.hidden=false;$('#bot-result').hidden=true;pending=null};
-$('#bot-review').onclick=()=>{if(!pending)return;const i=state.assignments.findIndex(a=>a.id===pending.id);if(i<0){state.assignments.push(pending);save()}modal.close();openReview(pending.id,pending);pending=null;form.reset();existingId='';form.hidden=false;$('#bot-result').hidden=true;updateMode();notify('Draft ready. Review and approve before scheduling.')};
-$('#bot-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('#bot-prompt').value);$('#bot-copy').textContent='Copied ✓'}catch{$('#bot-prompt').focus();$('#bot-prompt').select();notify('Select and copy the prompt with your keyboard.')}};
-checkAI();
+input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();$('#bot-form').requestSubmit()}});
+reset();checkAI();
 })();
