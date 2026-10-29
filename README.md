@@ -15,7 +15,17 @@ Open `dist/index.html` in a modern browser. No build step or dependencies are re
 
 ## Deploy
 
-Publish the `dist` folder using any static website host.
+GitHub Pages publishes the `docs/` folder on `main` at:
+
+https://wrightiv-dotcom.github.io/studysprint/
+
+To publish website updates:
+
+1. Edit the website files in `dist/`.
+2. Run `node scripts/prepare-pages.cjs` to update `docs/`.
+3. Commit and push the changed files to `main`.
+
+GitHub automatically rebuilds the site after a push. The repository and deployed website are public. No API keys or custom workflow permissions are required.
 
 ## Data and planning
 
