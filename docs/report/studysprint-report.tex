@@ -40,9 +40,9 @@
 \section{Purpose and implemented scope}
 StudySprint helps students turn assignment requirements, deadlines, and available study time into smaller milestones and realistic sessions. Instead of maintaining only a deadline list, a student can review how the work will be divided and whether it fits before submission.
 
-The implemented application is a static HTML, CSS, and JavaScript website hosted on GitHub Pages. It includes assignment entry, editable milestone estimates, daily availability windows, schedule validation, plan approval, session completion, and replanning. The night sky design uses an animated cloud-and-stars background, translucent navy panels, and light text and icons.
+The application includes an Express JavaScript framework backend and an HTML, CSS, and JavaScript frontend. A static local-planning edition is live on GitHub Pages; the framework edition is prepared for Render. Both include assignment entry, editable milestone estimates, daily availability, schedule validation, approval, completion, and replanning. The design uses an animated night sky, translucent navy panels, and light text and icons.
 
-SprintBot provides a faster way to create a proposed plan. It uses local rules and assignment templates. \textbf{It is not a connected language-model agent.} An optional prompt-copying feature lets the user ask ChatGPT to refine a plan separately. This distinction describes the delivered software rather than a proposed future AI architecture.
+SprintBot offers separate local and AI modes. Local mode uses rules and templates. The new server-side AI agent uses the OpenAI Responses API and three function tools to inspect context, check a proposed plan, and revise it. \textbf{Live AI activation still requires a Render connection and a privately configured API key.} The interface does not describe local templates as model-generated output.
 
 \subsection{Typical user workflow}
 \begin{enumerate}
@@ -60,7 +60,7 @@ A usable proposal must fit within available windows, avoid other approved sessio
 \newpage
 \section{Architecture and project artifacts}
 \subsection{Client-side architecture}
-The browser loads the page structure and styles, initializes application state, and attaches event handlers. Assignment and availability data are stored in \file{localStorage} under the key \file{studysprint-v1}. The scheduler and SprintBot run in the same browser. There is no application server, account system, database service, or stored model API key in this version.
+The browser loads the interface and stores assignments in \file{localStorage} under \file{studysprint-v1}. Express serves only the public \file{dist/} folder and exposes health, configuration, and planning endpoints. The AI endpoint orchestrates model tool calls; local mode remains in the browser. There is no account database. The model key is read only from the server environment and never sent to the frontend.
 
 \begin{center}
 \colorbox{pale}{\parbox{0.94\linewidth}{\centering
@@ -89,7 +89,7 @@ The repository separates editable website source from the folder published by Gi
 \file{dist/assets/}\newline\file{clouds-night-sky.gif} & Animated background asset included with the website.\\
 \file{docs/} & Published copy of the site, including \file{.nojekyll}.\\
 \file{scripts/prepare-pages.cjs} & Copies website files from \file{dist/} into \file{docs/}.\\
-\file{tests/sprint-planner.test.cjs} & Six automated planning and scheduling tests.\\
+\file{tests/} & Six planner tests, six agent tests, and four API tests.\\
 \file{package.json}, \file{README.md} & Test/publishing commands and project instructions.\\
 \file{report/studysprint-report.tex} & Editable LaTeX source for this report.\\
 \file{output/pdf/}\newline\file{studysprint-report.pdf} & Compiled report artifact.\\\bottomrule
@@ -115,15 +115,35 @@ A student enters a research paper requiring four estimated hours. A writing temp
 
 This example explains the algorithm; it is not a record of a student study or a claim that a research paper always requires four hours. The student is responsible for choosing realistic estimates and checking the rubric.
 
-\subsection{Optional AI refinement}
+\subsection{Optional separate ChatGPT refinement}
 After a local proposal, the assistant can prepare a planning prompt containing the assignment and proposed milestones. The student chooses whether to copy it and open ChatGPT. The site does not automatically transmit the assignment, call a model API, or import ChatGPT's answer. Any refined steps must be reviewed and entered by the student.
 
-A future integrated model would require a suitable service architecture, protected credentials, explicit data handling, and the same independent schedule checks. Those capabilities are outside the current implementation.
+The integrated Express agent described on the next page uses the same independent scheduler. The separate ChatGPT prompt is an optional alternative, not the implementation of the new tool-calling agent.
+
+\newpage
+\section{Express framework and tool-calling AI agent}
+\subsection{Server artifacts and agent loop}
+\file{server/app.cjs} implements the Express framework routes, static hosting, request limits, and safe error responses. \file{server/agent.cjs} implements the Responses API loop. \file{dist/scheduler.js} is shared by browser and server so model proposals are checked by deterministic code. \file{render.yaml} declares the Render service, while \file{package-lock.json} records dependencies for reproducible installation.
+
+The agent has three tools: \file{read_assignment}, \file{get_availability}, and \file{check_schedule}. It must read both context tools before submitting a proposal. The schedule tool checks two to eight milestones, whole-minute estimates, the unchanged effort budget, availability, conflicts, and the deadline. Tool feedback is returned to the model so it can revise an invalid proposal. The loop is limited to six model turns, eight tool calls, and three schedule checks. It cannot approve or save a plan, run arbitrary code, or access other tools.
+
+\subsection{Private credentials and consent}
+The server reads \file{OPENAI_API_KEY} from Render's private Environment settings, or from an ignored local \file{.env} file. Only blank variable names are included in \file{.env.example}. The key is absent from HTML, browser JavaScript, report content, and API responses. Environment files and private keys are excluded by \file{.gitignore}.
+
+Selecting AI mode requires consent to send the chosen assignment requirements, daily windows, occupied session times, and time zone to the server and OpenAI. Other assignment text is not sent. The provider request uses \file{store: false}; this setting does not imply zero provider retention. The application should be used with non-sensitive class examples and the institution's data rules.
+
+\subsection{Deployment and current verification boundary}
+Run \file{npm ci} and \file{npm start} to serve the framework app. The Render Blueprint uses those commands, a free Node web service, and \file{/api/health}. \file{/api/config} reports whether AI is configured without revealing the key. On a GitHub Pages origin, the backend is unavailable and the interface keeps AI mode disabled while preserving local planning.
+
+The Express backend and tool loop have been tested with simulated model responses. \textbf{A real-provider request and a Render deployment have not yet been verified.} The owner must connect Render, privately set a valid model key with API credits/access, deploy, and exercise AI mode. The actual Render URL must then be added to this report; no unverified URL is claimed here. The verified public demonstration link remains on page one.
+
+\subsection{Operational boundaries}
+AI requests have payload checks, same-origin browser restrictions, five submissions per visitor per hour, thirty per server per hour, two concurrent runs, and a 90-second timeout. In-memory counters reset on restart and are not a durable billing cap. Provider spending controls and monitoring remain necessary. Visitor-supplied availability is not an authenticated calendar, and future daylight-saving changes may require reviewing session times.
 
 \newpage
 \section{Validation, deployment, and reproduction}
 \subsection{Completed verification}
-The six automated tests passed for the SprintBot release reviewed in this report:
+Six planner tests passed for the framework update reviewed in this report:
 \begin{enumerate}
 \item Relevant templates for research, coding, exam, and presentation work.
 \item Preservation of explicit tasks supplied on separate lines.
@@ -132,16 +152,16 @@ The six automated tests passed for the SprintBot release reviewed in this report
 \item Proposals that avoid approved sessions and do not mutate approved work during preview.
 \item Reporting of a shortfall when no study time is available.
 \end{enumerate}
-JavaScript syntax checks also passed. GitHub Pages reported a successful deployment for the reviewed website commit, and HTTP checks returned status 200 for the page and new SprintBot assets. Interactive browser visual testing was unavailable in the development environment. These checks do not constitute a full accessibility audit, usability study, or security certification.
+Six agent tests cover tool use, revision, feasibility, limits, and time zones. Four Express tests cover configuration, hidden files, invalid requests, and key isolation. \textbf{All 16 tests passed using simulated provider responses.} Live Render/model verification is pending. Interactive browser testing was unavailable; this is not a full accessibility or security audit.
 
 \subsection{Deployment arrangement}
 The public repository is \href{https://github.com/wrightiv-dotcom/studysprint}{wrightiv-dotcom/studysprint}. GitHub Pages publishes the \file{docs/} directory on \file{main}. Branch-based publishing avoids requiring a custom workflow upload. The current deployment is accessible at \url{https://wrightiv-dotcom.github.io/studysprint/}.
 
-The website release examined for this report is commit \href{https://github.com/wrightiv-dotcom/studysprint/commit/91471d0139e5c1182fb64f096411511ee908f572}{\texttt{91471d0}}. The report and its download links are added in a subsequent documentation update.
+\file{DEPLOYMENT.md} contains the Render activation checklist and a five-minute class presentation guide. The framework update and this report are delivered together.
 
 \subsection{Reproducing and updating the project}
 \begin{enumerate}
-\item Clone the repository and open \file{dist/index.html} in a modern browser, or serve the \file{dist/} folder using a local static server. The website requires no dependency installation or build step.
+\item Clone the repository, run \file{npm ci}, then \file{npm start} for the Express app. The static local-planning edition can still be opened directly from \file{dist/index.html}.
 \item With Node.js available, run \file{npm test} to execute the planning tests.
 \item Edit website files under \file{dist/}, then run \file{npm run prepare:pages} to refresh the published copy.
 \item Commit the source and published files and push \file{main}. Confirm the Pages build succeeds before treating an update as live.
@@ -155,6 +175,7 @@ Generated LaTeX logs, auxiliary files, credentials, private keys, dependency fol
 \item \textbf{Live application:} \url{https://wrightiv-dotcom.github.io/studysprint/}
 \item \textbf{Source and artifacts:} \url{https://github.com/wrightiv-dotcom/studysprint}
 \item \textbf{Deployment history:} \url{https://github.com/wrightiv-dotcom/studysprint/actions}
+\item \textbf{AI implementation:} \href{https://developers.openai.com/api/docs/guides/function-calling}{OpenAI function calling}; \href{https://render.com/docs/deploy-node-express-app}{Render Express deployment}.
 \item \textbf{GitHub Pages publishing documentation:} \href{https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site}{Configuring a publishing source for a GitHub Pages site}.
 \end{itemize}
 \end{document}

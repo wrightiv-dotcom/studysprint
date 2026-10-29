@@ -1,8 +1,6 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
-const vm=require('node:vm');
+const {schedule}=require('../dist/scheduler.js');
 const {plan}=require('../dist/sprint-planner.js');
 const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const base={title:'History research paper',requirements:'Research the topic and write a cited essay.',hours:4,deadline:dateKey(new Date(Date.now()+7*86400000))};
@@ -25,9 +23,8 @@ test('Invalid and past-due requests cannot create a proposal',()=>{
  for(const change of [{hours:0},{hours:Infinity},{hours:201},{title:' '},{requirements:''},{deadline:'2020-01-01'},{deadline:'invalid'},{type:'unsupported'}])assert.throws(()=>plan({...base,...change}));
 });
 function scheduler(){
- const src=fs.readFileSync(path.join(__dirname,'../dist/script.js'),'utf8');
- const context={state:{assignments:[],windows:Array.from({length:7},()=>({start:'00:00',end:'23:59'}))},crypto:require('node:crypto').webcrypto,dateKey,minutes:s=>Number(s.split(':')[0])*60+Number(s.split(':')[1])};
- vm.createContext(context);vm.runInContext(src.slice(src.indexOf('function schedule('),src.indexOf('\nfunction render')),context);return context;
+ const context={state:{assignments:[],windows:Array.from({length:7},()=>({start:'00:00',end:'23:59'}))}};
+ context.schedule=a=>schedule(a,{windows:context.state.windows,busy:context.state.assignments.filter(x=>x.id!==a.id&&x.approved).flatMap(x=>x.sessions.filter(s=>!s.done))});return context;
 }
 test('SprintBot proposals fit without overlapping an approved assignment',()=>{
  const ctx=scheduler();const proposal={...base,id:'proposal',sessions:[],milestones:plan(base).milestones.map((m,i)=>({...m,id:String(i)}))};
