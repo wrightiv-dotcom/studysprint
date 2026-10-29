@@ -14,5 +14,5 @@ html=html.replace(/<script src="([^"]+)"><\/script>/g,(_,file)=>{
  return '<script>\n'+js.replace(/<\/script/gi,'<\\/script')+'\n</script>';
 });
 html=html.replace(/href="report\//g,`href="${origin}report/`).replace(/href="studysprint\.html"/g,`href="${origin}studysprint.html"`);
-fs.writeFileSync(path.join(dist,'studysprint.html'),html);
+fs.writeFileSync(path.join(root,'studysprint.html'),html);
 console.log('Created downloadable HTML with embedded styles and scripts.');
