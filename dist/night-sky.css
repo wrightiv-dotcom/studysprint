@@ -1,0 +1,46 @@
+/* Night sky palette: shared light colors for type and icons. */
+:root{color-scheme:dark;--ink:#eff7ff;--muted:#bed1e5;--line:rgba(187,220,250,.2);--orange:#cbe8ff;--bg:#071526;--sky-light:#e1f2ff;--sky-soft:#b9d4ed}
+body{min-height:100vh;background:#071526;color:var(--ink);isolation:isolate}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(120deg,rgba(3,10,27,.45),rgba(5,20,39,.25)),url('assets/clouds-night-sky.gif') center center/cover no-repeat}
+aside{background:rgba(5,16,34,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+header{background:rgba(5,16,34,.35)}
+header,header strong,.today,.workspace,.eyebrow,nav button,nav .active,.brand,.dot{color:var(--sky-light)}
+header b{color:var(--sky-soft)}
+nav .active{background:rgba(159,207,246,.16);box-shadow:inset 0 0 0 1px rgba(184,222,255,.22)}
+nav button:hover{background:rgba(159,207,246,.12)}
+nav small,.avatar{background:rgba(159,207,246,.17);color:var(--sky-light)}
+.side-note,.panel,.stats article{background:rgba(7,24,45,.8);border-color:var(--line);box-shadow:0 10px 35px rgba(0,5,20,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.side-note p,.profile small,.stats label,.stats small,.stats em,.section-heading p,.assignment p,.session p,.session small,.capacity,.capacity small,footer,dialog p,label,.fine{color:var(--muted)}
+.fine{color:var(--muted)!important}
+.side-note>span,.mini-art,.mini-art i,.empty-icon,.stat-icon,.spark,.hero em{color:var(--sky-light)}
+.logo{background:rgba(167,218,255,.2);border:1px solid rgba(202,233,255,.35);color:var(--sky-light)}
+.hero{background:linear-gradient(115deg,rgba(16,43,71,.88),rgba(12,35,62,.6));border-color:rgba(189,222,255,.26);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.hero p{color:#c7daec}.hero h2{color:#f4f9ff}.hero em{text-shadow:0 0 25px rgba(162,215,255,.25)}
+.pill{background:rgba(179,219,255,.1);color:var(--sky-light);border:1px solid var(--line)}
+.primary,.dark{background:rgba(79,131,181,.42);border:1px solid rgba(189,225,255,.45);color:var(--ink);box-shadow:0 4px 16px rgba(0,8,28,.15)}
+button:hover{filter:brightness(1.15)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #cbe8ff;outline-offset:3px}
+.orbit{background:rgba(139,190,233,.1);border:1px solid rgba(187,222,250,.17)}
+.paper{background:rgba(14,35,60,.94);border:1px solid rgba(198,227,255,.26);box-shadow:0 15px 30px rgba(0,7,24,.25);color:var(--ink)}
+.paper-tag,.paper-line:last-of-type{color:var(--sky-soft)}
+.paper-line b{color:var(--sky-light);border-color:rgba(190,224,251,.4)}
+.paper-bar{background:linear-gradient(to right,#b6dcf8 67%,rgba(184,216,244,.16) 67%)}
+.floating{background:#193a59;color:var(--ink);border:1px solid rgba(196,227,255,.35);box-shadow:0 5px 18px rgba(0,7,23,.25)}
+.peach,.lilac,.green{background:rgba(160,207,246,.13);color:var(--sky-light);border:1px solid rgba(187,220,250,.2)}
+.section-heading h2 span,.course,.badge,.badge.draft{background:rgba(155,205,249,.12);color:var(--sky-light)}
+.badge.draft{border:1px dashed rgba(190,224,255,.35)}
+.section-heading select,input,textarea,select{background:#10263f;color:var(--ink);border-color:rgba(191,223,252,.3)}
+input::placeholder,textarea::placeholder{color:#a6bdd4;opacity:1}
+.empty{background:rgba(9,26,46,.2);border-color:rgba(190,221,250,.25)}
+.empty .empty-icon,.text-button,.actions button,.actions button:first-child{color:var(--sky-light)}
+.assignment{background:rgba(8,23,43,.36)}
+.progress,.capacity>div{background:rgba(169,210,245,.14)}
+.progress i,.capacity i{background:#b4d9f7}
+.session{border-left-color:#abcfee}.session button{background:rgba(164,213,252,.15);color:var(--sky-light);border:1px solid rgba(194,226,252,.22)}
+.capacity b{color:var(--sky-light)}
+dialog{background:rgba(8,25,47,.97);color:var(--ink);border-color:rgba(192,223,252,.35)}
+dialog::backdrop{background:rgba(0,6,22,.65)}
+.close,.milestone-edit span{color:var(--sky-light)}
+#validation{color:#c0e9dc}#validation.error{color:#ffccbc}
+#toast{background:#183c5b;color:var(--ink);border:1px solid rgba(192,223,252,.4)}
+@media(max-width:700px){aside{background:rgba(5,16,34,.85)}body::before{background-position:center}}
