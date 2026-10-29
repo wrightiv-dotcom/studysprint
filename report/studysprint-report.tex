@@ -1,0 +1,160 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=0.8in,headheight=15pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage[table]{xcolor}
+\usepackage{booktabs,tabularx,array,enumitem,fancyhdr,titlesec}
+\usepackage{hyperref}
+\definecolor{navy}{HTML}{12334D}
+\definecolor{blue}{HTML}{246B92}
+\definecolor{pale}{HTML}{EDF4F8}
+\definecolor{gray}{HTML}{51616E}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue,pdftitle={StudySprint: Project and Artifact Report},pdfauthor={wrightiv-dotcom},pdfsubject={Study planning website, SprintBot, implementation and deployment}}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{7pt}
+\setlist{nosep,leftmargin=1.4em,topsep=4pt}
+\renewcommand{\arraystretch}{1.25}
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{navy}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{7pt}
+\titlespacing*{\subsection}{0pt}{10pt}{3pt}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{gray}STUDYSPRINT / PROJECT REPORT}
+\fancyhead[R]{\small\color{gray}29 October 2026}
+\fancyfoot[L]{\small\href{https://wrightiv-dotcom.github.io/studysprint/}{Live application}\quad /\quad\href{https://github.com/wrightiv-dotcom/studysprint}{Source repository}}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\file}[1]{\texttt{\small\detokenize{#1}}}
+\begin{document}
+{\color{blue}\small\bfseries WEB APPLICATION / IMPLEMENTATION / ARTIFACTS}\par
+{\Huge\bfseries\color{navy}StudySprint}\par
+{\Large Project and Artifact Report}\par
+{\color{gray}A browser-based study planner with the SprintBot quick planning assistant.}
+
+\colorbox{pale}{\parbox{\dimexpr\linewidth-2\fboxsep}{\textbf{Project owner:} \href{https://github.com/wrightiv-dotcom}{wrightiv-dotcom}\quad
+\textbf{Report date:} 29 October 2026\\[4pt]
+\textbf{Live app:} \url{https://wrightiv-dotcom.github.io/studysprint/}\\
+\textbf{GitHub:} \url{https://github.com/wrightiv-dotcom/studysprint}}}
+
+\section{Purpose and implemented scope}
+StudySprint helps students turn assignment requirements, deadlines, and available study time into smaller milestones and realistic sessions. Instead of maintaining only a deadline list, a student can review how the work will be divided and whether it fits before submission.
+
+The implemented application is a static HTML, CSS, and JavaScript website hosted on GitHub Pages. It includes assignment entry, editable milestone estimates, daily availability windows, schedule validation, plan approval, session completion, and replanning. The night sky design uses an animated cloud-and-stars background, translucent navy panels, and light text and icons.
+
+SprintBot provides a faster way to create a proposed plan. It uses local rules and assignment templates. \textbf{It is not a connected language-model agent.} An optional prompt-copying feature lets the user ask ChatGPT to refine a plan separately. This distinction describes the delivered software rather than a proposed future AI architecture.
+
+\subsection{Typical user workflow}
+\begin{enumerate}
+\item Set available study windows for each day of the week.
+\item Enter an assignment title, course, deadline, requirements, and estimated effort, or open \textbf{Plan with SprintBot} for a quick proposal.
+\item Review the milestone titles and time estimates. Check the proposal against the actual assignment rubric.
+\item Check schedule feasibility. If insufficient time is available, adjust availability or estimates and review again.
+\item Approve the plan to place its sessions in the study schedule.
+\item Mark sessions complete and replan unfinished work when circumstances change.
+\end{enumerate}
+
+\subsection{Success criteria}
+A usable proposal must fit within available windows, avoid other approved sessions, and finish before the assignment deadline. The application must explain an infeasible workload and require approval before scheduling a revised plan. These checks concern time allocation; they do not establish the academic quality of a student's eventual submission.
+
+\newpage
+\section{Architecture and project artifacts}
+\subsection{Client-side architecture}
+The browser loads the page structure and styles, initializes application state, and attaches event handlers. Assignment and availability data are stored in \file{localStorage} under the key \file{studysprint-v1}. The scheduler and SprintBot run in the same browser. There is no application server, account system, database service, or stored model API key in this version.
+
+\begin{center}
+\colorbox{pale}{\parbox{0.94\linewidth}{\centering
+Assignment + availability inputs\\[5pt]
+$\downarrow$\\[3pt]
+SprintBot proposal or editable milestone draft\\[5pt]
+$\downarrow$\\[3pt]
+Schedule checks $\longrightarrow$ review and explicit approval\\[5pt]
+$\downarrow$\\[3pt]
+Browser storage + dashboard + completion / replanning}}
+\end{center}
+
+\subsection{Artifact inventory}
+The repository separates editable website source from the folder published by GitHub Pages. Both contain the required web assets.
+
+{\small
+\begin{tabularx}{\linewidth}{@{}p{0.37\linewidth}X@{}}
+\toprule
+\textbf{Artifact} & \textbf{Purpose}\\\midrule
+\file{dist/index.html} & Dashboard, assignment forms, dialogs, navigation, and script loading.\\
+\file{dist/style.css} & Responsive layout, base styling, and night sky theme.\\
+\file{dist/script.js} & Application state, scheduling, approval, progress, and replanning.\\
+\file{dist/sprint-planner.js} & Pure planning logic: assignment categories, task lists, and time distribution.\\
+\file{dist/sprintbot.js} & Robot interface, draft preview, schedule handoff, and optional ChatGPT prompt.\\
+\file{dist/sprintbot.css} & Robot launcher, assistant dialog, and milestone preview styles.\\
+\file{dist/assets/}\newline\file{clouds-night-sky.gif} & Animated background asset included with the website.\\
+\file{docs/} & Published copy of the site, including \file{.nojekyll}.\\
+\file{scripts/prepare-pages.cjs} & Copies website files from \file{dist/} into \file{docs/}.\\
+\file{tests/sprint-planner.test.cjs} & Six automated planning and scheduling tests.\\
+\file{package.json}, \file{README.md} & Test/publishing commands and project instructions.\\
+\file{report/studysprint-report.tex} & Editable LaTeX source for this report.\\
+\file{output/pdf/}\newline\file{studysprint-report.pdf} & Compiled report artifact.\\\bottomrule
+\end{tabularx}}
+
+\subsection{Storage and privacy boundary}
+Browser storage is local to the visitor's browser and site origin. It is not a backup or cross-device synchronization service. Clearing browser data can remove saved assignments. The repository and rendered website are public, but a visitor's local assignments are not committed to GitHub or shared with other visitors by the application.
+
+\newpage
+\section{Planning behavior and SprintBot}
+\subsection{Milestone generation}
+SprintBot accepts a new assignment or an existing assignment, requirements, a deadline, an assignment category, and a total estimate. Automatic category selection uses keywords for writing, coding, exams, and presentations; unmatched work uses a general template. This is a heuristic and may be overridden by the student.
+
+If the requirements contain between two and eight nonempty task lines of sufficient length, those lines become the proposed milestones. Otherwise, the selected category supplies four starter milestones. The planner distributes the total effort in whole minutes across the proposed steps. It validates required text, a deadline that has not passed, and an estimate between 0.5 and 200 hours. All suggested titles and estimates remain reviewable.
+
+\subsection{Scheduling and approval}
+The scheduler examines daily study windows from the current date through the deadline, subject to a 730-day search limit. Today's sessions start no earlier than the next applicable quarter-hour. Other approved, unfinished sessions are treated as occupied time. Proposed sessions last up to 60 minutes and may be shorter at a window boundary or to finish a milestone.
+
+If remaining work cannot fit, the scheduler returns a shortfall in minutes. Approval is disabled for invalid estimates or an infeasible plan. Completed work is subtracted when replanning through the existing assignment flow. SprintBot directs assignments with completed sessions back to that flow rather than regenerating and discarding progress. An existing approved plan is not replaced merely by previewing a new SprintBot proposal.
+
+\subsection{Illustrative example}
+A student enters a research paper requiring four estimated hours. A writing template proposes research, outlining, drafting, and revision. With four equal steps, each starts at 60 minutes. Suppose the student has two free 120-minute windows before the deadline and no conflicting approved work. The scheduler can allocate four 60-minute sessions. If only one such window exists, the proposal is short by 120 minutes and cannot be approved unchanged.
+
+This example explains the algorithm; it is not a record of a student study or a claim that a research paper always requires four hours. The student is responsible for choosing realistic estimates and checking the rubric.
+
+\subsection{Optional AI refinement}
+After a local proposal, the assistant can prepare a planning prompt containing the assignment and proposed milestones. The student chooses whether to copy it and open ChatGPT. The site does not automatically transmit the assignment, call a model API, or import ChatGPT's answer. Any refined steps must be reviewed and entered by the student.
+
+A future integrated model would require a suitable service architecture, protected credentials, explicit data handling, and the same independent schedule checks. Those capabilities are outside the current implementation.
+
+\newpage
+\section{Validation, deployment, and reproduction}
+\subsection{Completed verification}
+The six automated tests passed for the SprintBot release reviewed in this report:
+\begin{enumerate}
+\item Relevant templates for research, coding, exam, and presentation work.
+\item Preservation of explicit tasks supplied on separate lines.
+\item Distribution of small time estimates without zero-length tasks or lost minutes.
+\item Rejection of invalid estimates, missing details, unsupported categories, and past deadlines.
+\item Proposals that avoid approved sessions and do not mutate approved work during preview.
+\item Reporting of a shortfall when no study time is available.
+\end{enumerate}
+JavaScript syntax checks also passed. GitHub Pages reported a successful deployment for the reviewed website commit, and HTTP checks returned status 200 for the page and new SprintBot assets. Interactive browser visual testing was unavailable in the development environment. These checks do not constitute a full accessibility audit, usability study, or security certification.
+
+\subsection{Deployment arrangement}
+The public repository is \href{https://github.com/wrightiv-dotcom/studysprint}{wrightiv-dotcom/studysprint}. GitHub Pages publishes the \file{docs/} directory on \file{main}. Branch-based publishing avoids requiring a custom workflow upload. The current deployment is accessible at \url{https://wrightiv-dotcom.github.io/studysprint/}.
+
+The website release examined for this report is commit \href{https://github.com/wrightiv-dotcom/studysprint/commit/91471d0139e5c1182fb64f096411511ee908f572}{\texttt{91471d0}}. The report and its download links are added in a subsequent documentation update.
+
+\subsection{Reproducing and updating the project}
+\begin{enumerate}
+\item Clone the repository and open \file{dist/index.html} in a modern browser, or serve the \file{dist/} folder using a local static server. The website requires no dependency installation or build step.
+\item With Node.js available, run \file{npm test} to execute the planning tests.
+\item Edit website files under \file{dist/}, then run \file{npm run prepare:pages} to refresh the published copy.
+\item Commit the source and published files and push \file{main}. Confirm the Pages build succeeds before treating an update as live.
+\item Compile this report with a LaTeX distribution, for example:\\
+\file{tectonic -o output/pdf report/studysprint-report.tex}
+\end{enumerate}
+Generated LaTeX logs, auxiliary files, credentials, private keys, dependency folders, and local archives do not belong in the public source history. The PDF and its LaTeX source are intentional project deliverables.
+
+\subsection{References and project links}
+\begin{itemize}
+\item \textbf{Live application:} \url{https://wrightiv-dotcom.github.io/studysprint/}
+\item \textbf{Source and artifacts:} \url{https://github.com/wrightiv-dotcom/studysprint}
+\item \textbf{Deployment history:} \url{https://github.com/wrightiv-dotcom/studysprint/actions}
+\item \textbf{GitHub Pages publishing documentation:} \href{https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site}{Configuring a publishing source for a GitHub Pages site}.
+\end{itemize}
+\end{document}

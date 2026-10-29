@@ -38,3 +38,19 @@ Run `npm test` for planning and schedule checks. Run `npm run prepare:pages` aft
 ## Storage
 
 Assignments and availability are saved in browser localStorage. Planning uses local rules, not a language model. External fonts are loaded from Google Fonts.
+
+## Project report
+
+The associated LaTeX report explains the project, implementation artifacts, planning rules, tests, deployment, and limitations. It includes clickable links to the live app and this repository.
+
+- [Read the compiled PDF](output/pdf/studysprint-report.pdf)
+- [View the LaTeX source](report/studysprint-report.tex)
+- [Download the report from the live site](https://wrightiv-dotcom.github.io/studysprint/report/studysprint-report.pdf)
+
+Compile from the repository root using Tectonic:
+
+```sh
+tectonic -o output/pdf report/studysprint-report.tex
+```
+
+After updating the report, copy the PDF and `.tex` source into `dist/report/`, run `npm run prepare:pages`, and push `main` to update the website downloads. Do not commit generated LaTeX logs or auxiliary files.
