@@ -1,0 +1,10 @@
+{
+  "name": "studysprint",
+  "version": "1.1.0",
+  "private": true,
+  "description": "StudySprint planner with SprintBot and GitHub Pages deployment",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "prepare:pages": "node scripts/prepare-pages.cjs"
+  }
+}

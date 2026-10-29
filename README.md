@@ -27,6 +27,14 @@ To publish website updates:
 
 GitHub automatically rebuilds the site after a push. The repository and deployed website are public. No API keys or custom workflow permissions are required.
 
-## Data and planning
+## SprintBot quick planner
+
+Select **Plan with SprintBot** to create milestones quickly. Paste an assignment, choose a type or let SprintBot select one, set an estimate and deadline, then review the suggested steps and schedule. A list of tasks on separate lines is used directly as editable milestones. Existing completed work is preserved through the original replanning flow.
+
+SprintBot uses local planning rules and templates, not a live language model. It does not send assignment data to a remote service. Its optional AI refinement section provides a prompt you can copy into ChatGPT yourself; no API keys are needed. Plans are only scheduled after approval.
+
+Run `npm test` for planning and schedule checks. Run `npm run prepare:pages` after editing `dist/`, then commit both `dist/` and `docs/` and push `main` to publish.
+
+## Storage
 
 Assignments and availability are saved in browser localStorage. Planning uses local rules, not a language model. External fonts are loaded from Google Fonts.
