@@ -4,6 +4,13 @@ A responsive study planner with an animated night sky, editable milestones, avai
 
 ## Run locally
 
+The complete website is in `dist/`:
+
+- `index.html` — page structure and forms
+- `style.css` — layout, responsive styles, and night sky theme
+- `script.js` — assignments, scheduling, approval, progress, and local storage
+- `assets/clouds-night-sky.gif` — animated background
+
 Open `dist/index.html` in a modern browser. No build step or dependencies are required. For a local server, run `npx serve dist`.
 
 ## Deploy
