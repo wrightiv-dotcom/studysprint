@@ -2,6 +2,8 @@
 
 A responsive study planner with an animated night sky, editable milestones, availability windows, schedule validation, plan approval, completion tracking, and replanning. Version 2 adds an **Express JavaScript framework backend** and an **OpenAI tool-calling AI agent**.
 
+Vercel Deployment: https://studysprint-acld.vercel.app/
+
 ## AI framework version: deploy on Render
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the Render Blueprint, private environment-variable setup, verification checklist, and class presentation guide. The backend and 16 tests are implemented; the live Render deployment and real-provider smoke test still require the owner's Render connection and privately configured API key.
