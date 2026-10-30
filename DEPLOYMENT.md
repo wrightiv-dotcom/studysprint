@@ -52,3 +52,11 @@ Open `http://localhost:3000`. With no key, the Express website still runs and lo
 - [Render Express deployment](https://render.com/docs/deploy-node-express-app)
 - [Render environment variables](https://render.com/docs/configure-environment-variables)
 - [OpenAI function calling](https://developers.openai.com/api/docs/guides/function-calling)
+
+## Vercel API hosting
+
+The static website is served from `dist/`; `api/config.js`, `api/health.js`, and `api/plan.js` expose the Express backend as Vercel Functions. `server/vercel.cjs` creates the app without starting a listening server. The planning function has a 100-second duration limit.
+
+In the Vercel project, open **Settings > Environment Variables**. Add `OPENAI_API_KEY` privately for Production, set `AI_ENABLED=true`, and optionally set `OPENAI_MODEL` to a model your API account can use (the code defaults to `gpt-5-mini`). Redeploy after changing environment variables. Never add the key to GitHub or browser code.
+
+Check `/api/health` for JSON and `/api/config` for `aiAvailable: true`. A configured key is necessary but does not prove model access or billing; complete a non-sensitive planning request and review its tool activity to verify that. GitHub Pages cannot run these functions and continues to use local planning.

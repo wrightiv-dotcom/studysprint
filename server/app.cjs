@@ -16,7 +16,7 @@ function createApp({env=process.env,agent=runAgent}={}){
  app.post('/api/plan',perVisitor,globalLimit,async(req,res)=>{
   res.set('Cache-Control','no-store');
   const origin=req.get('origin');if(origin&&origin!==`${req.protocol}://${req.get('host')}`)return res.status(403).json({error:'Open the app on its own hosting domain to use the agent.'});
-  if(!configured())return res.status(503).json({error:'Live AI is not configured. Use the local planner; the site owner must set OPENAI_API_KEY privately in Render.'});
+  if(!configured())return res.status(503).json({error:'Live AI is not configured. Use the local planner; the site owner must set OPENAI_API_KEY privately in the hosting environment.'});
   let context;try{context=validateContext(req.body)}catch(error){return res.status(400).json({error:error.message})}
   if(active>=2)return res.status(429).json({error:'SprintBot is helping other students. Please try again shortly.'});active++;
   try{const result=await agent(context,{apiKey:env.OPENAI_API_KEY,model:env.OPENAI_MODEL||'gpt-5-mini',signal:AbortSignal.timeout(90000)});res.json(result)}
